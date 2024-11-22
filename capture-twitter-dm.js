@@ -85,11 +85,14 @@ function updateCounter() {
 
 // Function to save messages to file
 function saveMessages() {
-	const blob = new Blob([JSON.stringify(messages, null, 2)], { type: 'application/json' });
+	const messageText = messages
+		.map(msg => msg.message)
+		.join('\n\n---\n\n');
+	const blob = new Blob([messageText], { type: 'text/plain' });
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement('a');
 	a.href = url;
-	a.download = 'twitter-dm-history.json';
+	a.download = 'twitter-dm-history.txt';
 	document.body.appendChild(a);
 	a.click();
 	document.body.removeChild(a);
