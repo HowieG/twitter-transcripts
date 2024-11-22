@@ -14,27 +14,27 @@ function createUI() {
 	ui.id = 'message-capture-ui';
 	ui.style.cssText = `
         position: fixed;
-        bottom: 20px;
-        right: 20px;
+        top: 0;
+        left: 0;
+        width: 50%;
+        height: 100%;
         background: rgba(0, 0, 0, 0.8);
         padding: 10px;
-        border-radius: 5px;
         z-index: 9999;
         color: white;
         font-family: Arial, sans-serif;
         display: flex;
         flex-direction: column;
         gap: 10px;
-        max-width: 300px;
+        font-size: 25px; /* Assuming the original font size was 12px, 2.5x bigger is 30px */
     `;
 
 	const logs = document.createElement('div');
 	logs.id = 'scroll-logs';
 	logs.style.cssText = `
-        max-height: 150px;
+        flex-grow: 1;
         overflow-y: auto;
-        font-size: 12px;
-        margin-bottom: 10px;
+        font-size: 25px; /* Adjusted to 2.5x bigger */
         background: rgba(0, 0, 0, 0.5);
         padding: 5px;
     `;
@@ -42,16 +42,22 @@ function createUI() {
 	const counter = document.createElement('div');
 	counter.id = 'message-counter';
 	counter.textContent = 'Messages captured: 0';
+	counter.style.cssText = `
+        font-size: 25px; /* 2.5x bigger */
+        color: #00FF00; /* Terminal green text */
+    `;
 
 	const saveButton = document.createElement('button');
 	saveButton.textContent = 'Save Messages';
 	saveButton.style.cssText = `
-        padding: 5px 10px;
+        width: 100%;
+        height: 200px;
         background: #1da1f2;
         border: none;
-        border-radius: 4px;
         color: white;
         cursor: pointer;
+        font-size: 60px;
+        text-align: center;
     `;
 	saveButton.onclick = saveMessages;
 
@@ -59,8 +65,6 @@ function createUI() {
 	ui.appendChild(counter);
 	ui.appendChild(saveButton);
 	document.body.appendChild(ui);
-
-	updateLogs('UI Created');
 }
 
 // Update logs in UI
@@ -68,7 +72,7 @@ function updateLogs(message) {
 	const logs = document.getElementById('scroll-logs');
 	if (logs) {
 		const logEntry = document.createElement('div');
-		logEntry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+		logEntry.textContent = `${message}`;
 		logs.appendChild(logEntry);
 		logs.scrollTop = logs.scrollHeight;
 		console.log(message);
@@ -170,14 +174,14 @@ function extractMessageData(messageEntry) {
 			messages.push({
 				message: messageText
 			});
-			updateLogs(`New message: ${messageText.substring(0, 50)}...`);
+			updateLogs(`Scraping message: ${messageText.substring(0, 50)}...`);
 			updateCounter();
 			return true;
 		} else {
-			console.log('Duplicate message found, skipping');
+			// console.log('Duplicate message found, skipping');
 		}
 	} else {
-		console.log('Incomplete message data:', { messageText });
+		// console.log('Incomplete message data:', { messageText });
 	}
 	return false;
 }
@@ -185,7 +189,6 @@ function extractMessageData(messageEntry) {
 // Set up scroll monitoring
 function startCapturing() {
 	createUI();
-	updateLogs('Starting message capture...');
 
 	// Try multiple possible scroll containers
 	const possibleContainers = [
@@ -203,8 +206,6 @@ function startCapturing() {
 		return;
 	}
 
-	updateLogs(`Found scroll container: ${scrollContainer.className || scrollContainer.tagName}`);
-
 	// Track scroll position
 	let lastScrollPosition = scrollContainer.scrollTop;
 	let scrollTimeout;
@@ -213,11 +214,9 @@ function startCapturing() {
 	['scroll', 'wheel', 'touchmove'].forEach(eventType => {
 		scrollContainer.addEventListener(eventType, () => {
 			const currentPosition = scrollContainer.scrollTop;
-			updateLogs(`${eventType} detected! Position: ${currentPosition}`);
 
 			clearTimeout(scrollTimeout);
 			scrollTimeout = setTimeout(() => {
-				updateLogs('Processing messages after scroll...');
 				const messageEntries = document.querySelectorAll('[data-testid="messageEntry"]');
 				let newMessages = 0;
 				messageEntries.forEach(entry => {
@@ -225,7 +224,6 @@ function startCapturing() {
 						newMessages++;
 					}
 				});
-				updateLogs(`Found ${newMessages} new messages`);
 			}, 500);
 
 			lastScrollPosition = currentPosition;
@@ -236,7 +234,6 @@ function startCapturing() {
 	const observer = new MutationObserver((mutations) => {
 		mutations.forEach(mutation => {
 			if (mutation.addedNodes.length > 0) {
-				updateLogs('DOM changes detected, checking for new messages...');
 				mutation.addedNodes.forEach(node => {
 					if (node.querySelectorAll) {
 						const messageEntries = node.querySelectorAll('[data-testid="messageEntry"]');
